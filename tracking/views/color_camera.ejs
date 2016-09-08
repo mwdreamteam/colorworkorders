@@ -1,0 +1,273 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tracking Colors</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="assets/demo.css">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+
+  <script src="../build/tracking-min.js"></script>
+  <script src="../build/dat.gui.min.js"></script>
+  <!-- <script src="../assets/stats.min.js"></script> -->
+  <!-- <script src="../assets/color_camera_gui.js"></script> -->
+
+  <style>
+    video, canvas {
+      margin-left: 50px;
+      margin-top: 10px;
+      position: absolute;
+    }
+
+    .processform {
+      margin-left: 50px;
+      margin-top: 260px;
+      position: absolute;
+      display:none;
+    }
+
+    .action {
+      text-align:center;
+      float:left;    
+    }
+
+    .buttons {
+      margin-left: 50px;
+      margin-top: 20px;
+      text-align:center;
+      clear:both;
+      float:left;
+    }
+
+    .captured {
+      margin-left: 100px;
+      margin-top: 300px;
+      /*margin-top: 370px;*/
+      position: absolute;
+
+    }
+
+  </style>
+
+
+</head>
+<body>
+
+  <div>
+    <video  id="video" width="300"  preload autoplay loop muted controls></video>
+    <canvas  id="canvas" width="300" ></canvas>    
+  </div>
+
+  <div class="processform" id="processform">
+
+    <input type="hidden" name="action" id="action" value="">
+
+    <div id="actionDiv" class="action">  </div> 
+
+    <textarea rows="3" cols="20" class="action" id="instructions" name="instructions">Instructions</textarea> 
+
+    <div class="action" id="output"></div>
+
+    <div class="action" id="captureButtonDiv">
+
+      <button type="button" id="capture" class="btn btn-default btn-sm action">
+        <span class="glyphicon glyphicon-camera"></span> 
+      </button>
+
+    </div> 
+
+    <div class="action" id="resetCaptureButtonDiv">
+     <button type="button" class="btn btn-default btn-sm" onclick="resetCaption()">
+      <span class="glyphicon glyphicon-trash"></span> 
+    </button>
+  </div>
+
+  <div id="buttonsDiv" class="buttons" >
+   <button type="button" id="button"  class="btn btn-default btn-sm" onclick="callProcess()">Submit </button>
+   <button type="button" id="reset" class="btn btn-default btn-sm" onclick="reset('processform')">Reset</button>
+ </div>
+
+</div>
+
+<div class="captured" >
+
+</div>
+
+
+<script> // Capture image 
+  (function() {
+    "use strict";
+
+    var video, $output;
+    var scale = 0.13;
+
+    var initialize = function() {
+      $output = $("#output");
+      video = $("#video").get(0);
+      $("#capture").click(captureImage);                
+    };
+
+    var captureImage = function() {
+      var canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth * scale;
+      canvas.height = video.videoHeight * scale;
+      canvas.getContext('2d')
+      .drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      var img = document.createElement("img");
+      img.setAttribute("id", "capturedImage");
+      img.src = canvas.toDataURL();
+      $output.prepend(img);
+      hide('captureButtonDiv');
+    };
+
+    $(initialize);            
+  }());
+
+</script>
+
+
+
+<script> 
+
+// Hide Div by Id
+function hide(name) {
+  document.getElementById(name).style.display = 'none';
+}
+
+function reset() {
+ if( document.getElementById('capturedImage') !== null) {
+  document.getElementById('capturedImage').parentNode.removeChild(capturedImage);
+  show('captureButtonDiv');
+}
+
+document.getElementById('instructions').value = "Instructions";
+document.getElementById('actionDiv').innerHTML = "";
+document.getElementById('action').value = "";
+document.getElementById('processform').style.display = 'none';
+}
+
+
+
+//Show Div by 
+function show(name) {
+  document.getElementById(name).style.display = 'block';
+}
+
+// Reset Captured Image 
+function resetCaption() {
+  if( document.getElementById('capturedImage') !== null) {
+    document.getElementById('capturedImage').parentNode.removeChild(capturedImage);
+  }
+  show('captureButtonDiv');
+}
+
+// Invoke Process
+function callProcess() {
+
+    // get image and encode to base64
+    var myImage;
+    if( document.getElementById('capturedImage') !== null) {
+      myImage = document.getElementById('capturedImage').src
+    } else {
+      myImage = ''; 
+    }
+
+  // create form JSON data
+  var data1 = {
+    action: document.getElementById('action').value,
+    instruction: document.getElementById('instructions').value,
+    image: myImage.substring(0, 100)
+  }
+// Debug data
+alert(JSON.stringify(data1));
+
+$.ajax({
+  url: '/api/v1.0/test',
+  dataType: "json",
+  type: "POST",
+  contentType: 'application/json; charset=utf-8',
+  data: JSON.stringify(data1),
+  async: true,
+  processData: false,
+  cache: false,
+  success: function (data) {
+   //alert('SUCCESS');
+ },
+ error: function (xhr, ajaxOptions, thrownError) {
+  //alert(xhr.status);
+//                alert(ajaxOptions);
+//                alert(thrownError);
+}
+});
+
+
+
+}
+
+</script>
+
+
+
+<script>
+  window.onload = function() {
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+      //var tracker = new tracking.ColorTracker();
+
+      var tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
+      tracking.track('#video', tracker, { camera: true });
+
+      tracker.on('track', function(event) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        event.data.forEach(function(rect) {
+          if (rect.color === 'custom') {
+            rect.color = tracker.customColor;
+          }
+
+          context.strokeStyle = rect.color;
+          context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+          context.font = '11px Helvetica';
+          context.fillStyle = "#fff";
+          //context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
+          //context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
+          context.fillText('color: ' + rect.color, rect.x + rect.width + 5, rect.y + 33);
+
+          if (rect.color === 'magenta') {
+            context.fillText('Fix ', rect.x + rect.width + 5, rect.y + 44);
+            document.getElementById('processform').style.display='block';
+            document.getElementById('action').value = "fix";
+            document.getElementById('actionDiv').innerHTML = "<br> <b>Fix: </b>";
+
+          } else if (rect.color === 'cyan') {
+            context.fillText('Clean  ', rect.x + rect.width + 5, rect.y + 44);
+            document.getElementById('processform').style.display='block';
+            document.getElementById('action').value = "clean";
+            document.getElementById('actionDiv').innerHTML = "<br> <b>Clean: </b>";
+
+          } else if (rect.color === 'yellow') {
+            context.fillText('Paint  ', rect.x + rect.width + 5, rect.y + 44);
+            document.getElementById('processform').style.display='block';
+            document.getElementById('action').value = "paint";
+            document.getElementById('actionDiv').innerHTML = "<br> <b>Paint: </b>";
+
+          } else {
+            document.getElementById('processform').style.display='none';
+            document.getElementById('actionDiv').innerHTML = "";
+
+          }
+        });
+      });
+
+     //initGUIControllers(tracker);
+   };
+ </script>
+
+</body>
+</html>
