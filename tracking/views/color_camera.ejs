@@ -103,7 +103,7 @@
     "use strict";
 
     var video, $output;
-    var scale = 0.13;
+    var scale = 0.25;
 
     var initialize = function() {
       $output = $("#output");
@@ -181,10 +181,11 @@ function callProcess() {
   var data1 = {
     action: document.getElementById('action').value,
     instruction: document.getElementById('instructions').value,
-    image: myImage.substring(0, 100)
+    image: myImage
+   // image: myImage.substring(0, 100)
   }
 // Debug data
-alert(JSON.stringify(data1));
+// alert(JSON.stringify(data1));
 
 $.ajax({
   url: '/api/v1.0/test',
@@ -196,7 +197,8 @@ $.ajax({
   processData: false,
   cache: false,
   success: function (data) {
-   //alert('SUCCESS');
+   jAlert('Your Work Order has been submitted. Thanks!', 'Work Order Confirmation');;
+
  },
  error: function (xhr, ajaxOptions, thrownError) {
   //alert(xhr.status);
