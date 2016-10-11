@@ -125,8 +125,8 @@ router.post('/api/v1.0/process', function(req, res, next) {
 		     'content-type': 'application/json',
 		     accept: 'application/json',
 		     authorization: '' },
-		  body: 
-		   { processDefId: 'default~ColourWorkOrdersApp!1.0~ProcessOrder',
+		  		  body: 
+		   { processDefId: 'default~ColourWorkOrdersApp!!1.1~ProcessOrder',
 		     serviceName: 'ProcessOrder.service',
 		     operation: 'start',
 		     payload: '<OrderBO xmlns=\'http://xmlns.oracle.com/bpm/bpmobject/BusinessData/OrderBO\'><action>'+action+'</action><instructions>'+instructions+'</instructions><fileId>'+fileId+'</fileId></OrderBO>',
