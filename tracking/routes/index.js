@@ -45,9 +45,36 @@ router.get('/api/v1.0/test/:id', function(req, res, next) {
 	}]);
 });
 
+router.post('/api/v1.0/test', function(req, res, next) {
+	 	var dateFormat = require('dateformat');
+	
+	var image = req.body.image;
+	 var imageBuffer;
+if (image != '') {
+	 imageBuffer= decodeBase64Image(req.body.image);
+	 } else {
+imageBuffer = 'no image';
+	 }
+
+	 var action = req.body.action;
+	 var instructions = req.body.instruction;
+	// 	//console.log("-----fileId: " + fileId);
+	 	console.log("-----image: " + image);
+	 	console.log("-----action: " + action);
+	 	console.log("-----instructions: " + instructions);
+
+	res.json({
+		"test": "OK",
+		"id": req.params.id
+	});
+});
+
+
+
+
 
 // this is the api that gets called to process the request
-router.post('/api/v1.0/test', function(req, res, next) {
+router.post('/api/v1.0/process', function(req, res, next) {
 
 	res.header("Access-Control-Allow-Origin", "*");
 
@@ -64,15 +91,15 @@ router.post('/api/v1.0/test', function(req, res, next) {
 	var instructions = req.body.instruction;
 
 	var options = { method: 'POST',
-	  url: 'https://anzinnovation-asaservice.documents.us2.oraclecloud.com/documents/api/1.1/files/data',
+	  url: 'https://asaservice-innovation.documents.us2.oraclecloud.com/documents/api/1.1/files/data',
 	  headers: 
 	   { 
 	     'cache-control': 'no-cache',
 	     accept: 'application/json',
-	     authorization: 'Basic dmlqYXlrdW1hci55ZW5uZUBvcmFjbGUuY29tOldlYkNlbnRlcjAxIw==',
+	     authorization: '',
 	     'content-type': 'multipart/form-data; boundary=---011000010111000001101001' },
 	  formData: 
-	   { jsonInputParameters: '{ "parentID":"FCBD8387A9EB98B381B93C6749E29DB0FB6EBA5D6E6B" }',
+	   { jsonInputParameters: '{ "parentID":"FFEC17184CD7A6684F478F8A56AB69D1288BDABAADAF" }',
 	     metadataValues: '{ "collection ": "WorkOrderCustomMetadata",  "xAction ": "cleanUp",  "xActionInstructions ": "Please clean the carpet"}',
 	     primaryFile: 
 	      { value: imageBuffer.data,
@@ -82,7 +109,8 @@ router.post('/api/v1.0/test', function(req, res, next) {
 
 	request(options, function (error, response, body) {
 		if (error) throw new Error(error);
-		var fileId = (JSON.parse(body)).id;
+		//var fileId = (JSON.parse(body)).id;
+		var fileId = "https://asaservice-innovation.documents.us2.oraclecloud.com/documents/file/" + JSON.parse(body).id;
 
 		console.log("-----fileId: " + fileId);
 		console.log("-----filename: " + fileName);
@@ -90,18 +118,18 @@ router.post('/api/v1.0/test', function(req, res, next) {
 		console.log("-----instructions: " + instructions);
 
 		var options = { method: 'POST',
-  		  url: 'https://businessinnovation-asaservice.process.us2.oraclecloud.com/bpm/api/3.0/processes',
+  		  url: 'https://process-innovation.process.us2.oraclecloud.com/bpm/api/3.0/processes',
 		  headers: 
 		   { 'postman-token': 'ae8c00e6-a12a-5fc2-e17e-eecff5e41545',
 		     'cache-control': 'no-cache',
 		     'content-type': 'application/json',
 		     accept: 'application/json',
-		     authorization: 'Basic dmlqYXlrdW1hci55ZW5uZUBvcmFjbGUuY29tOldlYkNlbnRlcjAxIw==' },
+		     authorization: '' },
 		  body: 
-		   { processDefId: 'default~ProcessColourWorkOrdersApp!1.0~Process',
-		     serviceName: 'Process.service',
+		   { processDefId: 'default~ColourWorkOrdersApp!1.0~ProcessOrder',
+		     serviceName: 'ProcessOrder.service',
 		     operation: 'start',
-		     payload: '<WorkOrderBO xmlns=\'http://xmlns.oracle.com/bpm/bpmobject/BusinessData/WorkOrderBO\'><action>'+action+'</action><instructions>'+instructions+'</instructions><fileId>'+fileId+'</fileId></WorkOrderBO>',
+		     payload: '<OrderBO xmlns=\'http://xmlns.oracle.com/bpm/bpmobject/BusinessData/OrderBO\'><action>'+action+'</action><instructions>'+instructions+'</instructions><fileId>'+fileId+'</fileId></OrderBO>',
 		     action: 'Submit' },
 		  json: true };
 
